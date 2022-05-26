@@ -32,19 +32,20 @@ import org.xml.sax.SAXException;
 @Controller
 public class MoonController {
 
+	private final String serviceKey = "e8eZUMOFe2kXFaYaiTcjiG%2B4IJPnI9BNp5heQfWMYJES06yVG9L9h7fAO%2FKEQtCMH%2F0bsx%2FufeaFAC3Y5tyfyQ%3D%3D";
+
 	@GetMapping("/")
-	@ResponseBody
 	public String home() throws IOException, SAXException, ParserConfigurationException {
 
 		StringBuilder urlBuilder = new StringBuilder("http://apis.data.go.kr/B090041/openapi/service/AstroEventInfoService/getAstroEventInfo"); /*URL*/
 		urlBuilder.append("?" + URLEncoder.encode("solYear","UTF-8") + "=" + URLEncoder.encode("2022", "UTF-8")); /*연*/
 		urlBuilder.append("&" + URLEncoder.encode("solMonth","UTF-8") + "=" + URLEncoder.encode("05", "UTF-8")); /*월*/
-		urlBuilder.append("&" + URLEncoder.encode("serviceKey","UTF-8") + "=e8eZUMOFe2kXFaYaiTcjiG%2B4IJPnI9BNp5heQfWMYJES06yVG9L9h7fAO%2FKEQtCMH%2F0bsx%2FufeaFAC3Y5tyfyQ%3D%3D"); /*Service Key*/
+		urlBuilder.append("&" + URLEncoder.encode("serviceKey","UTF-8") + "=" + serviceKey); /*Service Key*/
 		URL url = new URL(urlBuilder.toString());
 		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 		conn.setRequestMethod("GET");
 		conn.setRequestProperty("Content-type", "application/json");
-		System.out.println("Response code: " + conn.getResponseCode());
+//		System.out.println("Response code: " + conn.getResponseCode());
 		BufferedReader rd;
 		if(conn.getResponseCode() >= 200 && conn.getResponseCode() <= 300) {
 			rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
@@ -58,7 +59,7 @@ public class MoonController {
 		}
 		rd.close();
 		conn.disconnect();
-		System.out.println(sb.toString());
+//		System.out.println(sb.toString());
 
 		DocumentBuilderFactory dbFactoty = DocumentBuilderFactory.newInstance();
 		DocumentBuilder dBuilder = dbFactoty.newDocumentBuilder();
@@ -66,10 +67,10 @@ public class MoonController {
 
 		// root tag
 		doc.getDocumentElement().normalize();
-		System.out.println("Root element: " + doc.getDocumentElement().getNodeName());
+//		System.out.println("Root element: " + doc.getDocumentElement().getNodeName());
 
 		NodeList nList = doc.getElementsByTagName("item");
-		System.out.println("----------------------------");
+//		System.out.println("----------------------------");
 		for (int i = 0; i < nList.getLength(); i++) {
 			Node nNode = nList.item(i);
 //			System.out.println("\nCurrent Element :" + nNode.getNodeName());
@@ -83,7 +84,61 @@ public class MoonController {
 			}
 		}
 
-		return sb.toString();
+		return "index";
+	}
+
+
+	@GetMapping("/moon")
+	public String moon() throws IOException, ParserConfigurationException, SAXException {
+		StringBuilder urlBuilder = new StringBuilder("http://apis.data.go.kr/B090041/openapi/service/LunPhInfoService/getLunPhInfo"); /*URL*/
+		urlBuilder.append("?" + URLEncoder.encode("serviceKey","UTF-8") + "=" + serviceKey); /*Service Key*/
+		urlBuilder.append("&" + URLEncoder.encode("solYear","UTF-8") + "=" + URLEncoder.encode("2022", "UTF-8")); /*연*/
+		urlBuilder.append("&" + URLEncoder.encode("solMonth","UTF-8") + "=" + URLEncoder.encode("05", "UTF-8")); /*월*/
+		urlBuilder.append("&" + URLEncoder.encode("solDay","UTF-8") + "=" + URLEncoder.encode("22", "UTF-8")); /*일*/
+		URL url = new URL(urlBuilder.toString());
+		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+		conn.setRequestMethod("GET");
+		conn.setRequestProperty("Content-type", "application/json");
+//		System.out.println("Response code: " + conn.getResponseCode());
+		BufferedReader rd;
+		if(conn.getResponseCode() >= 200 && conn.getResponseCode() <= 300) {
+			rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+		} else {
+			rd = new BufferedReader(new InputStreamReader(conn.getErrorStream()));
+		}
+		StringBuilder sb = new StringBuilder();
+		String line;
+		while ((line = rd.readLine()) != null) {
+			sb.append(line);
+		}
+		rd.close();
+		conn.disconnect();
+//		System.out.println(sb.toString());
+
+		DocumentBuilderFactory dbFactoty = DocumentBuilderFactory.newInstance();
+		DocumentBuilder dBuilder = dbFactoty.newDocumentBuilder();
+		Document doc = dBuilder.parse(new InputSource(new StringReader(sb.toString())));
+
+		// root tag
+		doc.getDocumentElement().normalize();
+//		System.out.println("Root element: " + doc.getDocumentElement().getNodeName());
+
+		NodeList nList = doc.getElementsByTagName("item");
+//		System.out.println("----------------------------");
+		for (int i = 0; i < nList.getLength(); i++) {
+			Node nNode = nList.item(i);
+			//			System.out.println("\nCurrent Element :" + nNode.getNodeName());
+			if (nNode.getNodeType() == Node.ELEMENT_NODE) {
+				Element eElement = (Element) nNode.getChildNodes();
+				System.out.println("Lunar Age : " + eElement.getElementsByTagName("lunAge").item(0).getTextContent());
+				System.out.println("Solar Day : " + eElement.getElementsByTagName("solDay").item(0).getTextContent());
+				System.out.println("Solar Month : " + eElement.getElementsByTagName("solMonth").item(0).getTextContent());
+				System.out.println("Solar Week : " + eElement.getElementsByTagName("solWeek").item(0).getTextContent());
+				System.out.println("Solar Year : " + eElement.getElementsByTagName("solYear").item(0).getTextContent());
+			}
+		}
+
+		return "index";
 	}
 
 
